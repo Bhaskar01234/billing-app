@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bill History</title>
+
+    <style>
+        body{
+            font-family:Arial;
+            background:#f5f7fb;
+            padding:20px;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+        }
+
+        th,td{
+            padding:12px;
+            border-bottom:1px solid #ddd;
+        }
+
+        th{
+            background:#2563eb;
+            color:white;
+        }
+
+        a{
+            text-decoration:none;
+            color:#2563eb;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Bill History</h1>
+
+<table>
+
+<tr>
+    <th>Customer</th>
+    <th>Product</th>
+    <th>Price</th>
+    <th>Qty</th>
+    <th>Total</th>
+</tr>
+
+{% for bill in bills %}
+<tr>
+    <td>{{ bill.customer }}</td>
+    <td>{{ bill.product }}</td>
+    <td>₹{{ bill.price }}</td>
+    <td>{{ bill.quantity }}</td>
+    <td>₹{{ bill.total }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="/">← Billing Page</a>
+
+</body>
+</html>

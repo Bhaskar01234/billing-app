@@ -17,6 +17,16 @@ class Product(DB.Model):
     quantity = DB.Column(DB.Integer, default=0)
 
 
+# Bill table
+class Bill(DB.Model):
+    id = DB.Column(DB.Integer, primary_key=True)
+    customer = DB.Column(DB.String(100))
+    product = DB.Column(DB.String(100))
+    price = DB.Column(DB.Integer)
+    quantity = DB.Column(DB.Integer)
+    total = DB.Column(DB.Integer)
+
+
 with app.app_context():
     DB.create_all()
 
@@ -34,7 +44,6 @@ def billing():
 
         customer = request.form['customer']
         product_id = request.form['product']
-
         quantity = int(request.form['quantity'])
 
         selected_product = Product.query.get(product_id)
@@ -47,8 +56,19 @@ def billing():
                 total = price * quantity
                 grand_total = total
 
-                # stock कम करो
+                # stock कम
                 selected_product.quantity -= quantity
+
+                # bill save
+                new_bill = Bill(
+                    customer=customer,
+                    product=selected_product.name,
+                    price=price,
+                    quantity=quantity,
+                    total=grand_total
+                )
+
+                DB.session.add(new_bill)
                 DB.session.commit()
 
                 return render_template(
@@ -70,7 +90,7 @@ def billing():
     )
 
 
-# Product page
+# Products page
 @app.route('/products', methods=['GET', 'POST'])
 def products():
 
@@ -96,6 +116,18 @@ def products():
     return render_template(
         'products.html',
         products=all_products
+    )
+
+
+# Bill history
+@app.route('/history')
+def history():
+
+    bills = Bill.query.order_by(Bill.id.desc()).all()
+
+    return render_template(
+        'history.html',
+        bills=bills
     )
 
 
