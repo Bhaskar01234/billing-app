@@ -20,7 +20,6 @@
 
         h1{
             text-align:center;
-            color:#222;
         }
 
         .card{
@@ -37,7 +36,6 @@
             margin:8px 0;
             border:1px solid #ccc;
             border-radius:8px;
-            font-size:16px;
         }
 
         button{
@@ -48,24 +46,19 @@
             border:none;
             border-radius:8px;
             font-size:16px;
-            cursor:pointer;
         }
 
-        button:hover{
-            background:#15803d;
+        .links a{
+            display:block;
+            margin-top:10px;
+            color:#2563eb;
+            text-decoration:none;
         }
 
         .bill{
             background:#ecfdf5;
             padding:20px;
             border-radius:12px;
-        }
-
-        a{
-            display:inline-block;
-            margin-top:15px;
-            text-decoration:none;
-            color:#2563eb;
         }
     </style>
 </head>
@@ -88,9 +81,7 @@
 
             <select name="product" required>
 
-                <option value="">
-                    Select Product
-                </option>
+                <option value="">Select Product</option>
 
                 {% for product in products %}
                 <option value="{{ product.id }}">
@@ -114,7 +105,10 @@
 
         </form>
 
-        <a href="/products">Manage Inventory</a>
+        <div class="links">
+            <a href="/products">Manage Inventory</a>
+            <a href="/history">View Bill History</a>
+        </div>
 
     </div>
 
@@ -125,11 +119,8 @@
         <h2>Bill Receipt</h2>
 
         <p><strong>Customer:</strong> {{ customer }}</p>
-
         <p><strong>Product:</strong> {{ product }}</p>
-
         <p><strong>Price:</strong> ₹{{ price }}</p>
-
         <p><strong>Quantity:</strong> {{ quantity }}</p>
 
         <h3>Total: ₹{{ grand_total }}</h3>
