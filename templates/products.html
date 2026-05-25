@@ -1,53 +1,169 @@
 <!DOCTYPE html>
-            width:100%;
-            margin-top:20px;
-            border-collapse:collapse;
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+
+    <style>
+        body{
+            font-family: Arial;
+            background:#f5f7fb;
+            margin:0;
+            padding:20px;
         }
 
-        th, td{
-            border:1px solid gray;
-            padding:10px;
+        .container{
+            max-width:900px;
+            margin:auto;
+        }
+
+        h1{
             text-align:center;
+            color:#222;
         }
 
-    </style>
+        .card{
+            background:white;
+            padding:20px;
+            border-radius:12px;
+            box-shadow:0 2px 10px rgba(0,0,0,.08);
+            margin-bottom:20px;
+        }
 
+        input{
+            width:100%;
+            padding:12px;
+            margin:8px 0;
+            border:1px solid #ccc;
+            border-radius:8px;
+            font-size:16px;
+        }
+
+        button{
+            width:100%;
+            padding:12px;
+            background:#2563eb;
+            color:white;
+            border:none;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#1d4ed8;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+        }
+
+        th,td{
+            padding:12px;
+            border-bottom:1px solid #ddd;
+            text-align:left;
+        }
+
+        th{
+            background:#2563eb;
+            color:white;
+        }
+
+        .low{
+            color:red;
+            font-weight:bold;
+        }
+
+        a{
+            display:inline-block;
+            margin-top:15px;
+            text-decoration:none;
+            color:#2563eb;
+        }
+    </style>
 </head>
 <body>
 
-<div class="box">
+<div class="container">
 
-<h2>Product Management</h2>
+    <h1>Inventory Management</h1>
 
-<form method="POST">
+    <div class="card">
 
-<input type="text" name="name" placeholder="Product Name" required>
+        <form method="POST">
 
-<input type="number" name="price" placeholder="Price" required>
+            <input
+                type="text"
+                name="name"
+                placeholder="Product Name"
+                required
+            >
 
-<button type="submit">Add Product</button>
+            <input
+                type="number"
+                name="price"
+                placeholder="Price"
+                required
+            >
 
-</form>
+            <input
+                type="number"
+                name="quantity"
+                placeholder="Stock Quantity"
+                required
+            >
 
-<table>
+            <button type="submit">
+                Add Product
+            </button>
 
-<tr>
-<th>ID</th>
-<th>Product</th>
-<th>Price</th>
-</tr>
+        </form>
 
-{% for product in products %}
+    </div>
 
-<tr>
-<td>{{ product.id }}</td>
-<td>{{ product.name }}</td>
-<td>₹{{ product.price }}</td>
-</tr>
+    <div class="card">
 
-{% endfor %}
+        <table>
 
-</table>
+            <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+            </tr>
+
+            {% for product in products %}
+            <tr>
+
+                <td>{{ product.name }}</td>
+
+                <td>₹{{ product.price }}</td>
+
+                <td>{{ product.quantity }}</td>
+
+                <td>
+                    {% if product.quantity == 0 %}
+                        <span class="low">Out of Stock</span>
+
+                    {% elif product.quantity <= 5 %}
+                        <span class="low">Low Stock ⚠️</span>
+
+                    {% else %}
+                        Available
+                    {% endif %}
+                </td>
+
+            </tr>
+            {% endfor %}
+
+        </table>
+
+        <a href="/">← Billing Page</a>
+
+    </div>
 
 </div>
 
