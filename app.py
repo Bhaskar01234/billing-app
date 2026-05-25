@@ -8,42 +8,69 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 DB = SQLAlchemy(app)
 
+
+# Product table
 class Product(DB.Model):
     id = DB.Column(DB.Integer, primary_key=True)
     name = DB.Column(DB.String(100))
     price = DB.Column(DB.Integer)
+    quantity = DB.Column(DB.Integer, default=0)
+
 
 with app.app_context():
     DB.create_all()
 
+
+# Billing page
 @app.route('/', methods=['GET', 'POST'])
 def billing():
 
     total = None
     grand_total = None
 
+    products = Product.query.all()
+
     if request.method == 'POST':
 
         customer = request.form['customer']
-        product = request.form['product']
-        price = int(request.form['price'])
+        product_id = request.form['product']
+
         quantity = int(request.form['quantity'])
 
-        total = price * quantity
-        grand_total = total
+        selected_product = Product.query.get(product_id)
 
-        return render_template(
-            'billing.html',
-            customer=customer,
-            product=product,
-            price=price,
-            quantity=quantity,
-            total=total,
-            grand_total=grand_total
-        )
+        if selected_product:
 
-    return render_template('billing.html')
+            if selected_product.quantity >= quantity:
 
+                price = selected_product.price
+                total = price * quantity
+                grand_total = total
+
+                # stock कम करो
+                selected_product.quantity -= quantity
+                DB.session.commit()
+
+                return render_template(
+                    'billing.html',
+                    customer=customer,
+                    product=selected_product.name,
+                    price=price,
+                    quantity=quantity,
+                    total=total,
+                    grand_total=grand_total,
+                    products=products
+                )
+
+        return redirect('/')
+
+    return render_template(
+        'billing.html',
+        products=products
+    )
+
+
+# Product page
 @app.route('/products', methods=['GET', 'POST'])
 def products():
 
@@ -51,8 +78,13 @@ def products():
 
         name = request.form['name']
         price = request.form['price']
+        quantity = request.form['quantity']
 
-        new_product = Product(name=name, price=price)
+        new_product = Product(
+            name=name,
+            price=price,
+            quantity=quantity
+        )
 
         DB.session.add(new_product)
         DB.session.commit()
@@ -61,7 +93,11 @@ def products():
 
     all_products = Product.query.all()
 
-    return render_template('products.html', products=all_products)
+    return render_template(
+        'products.html',
+        products=all_products
+    )
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
