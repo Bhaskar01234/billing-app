@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -9,15 +10,17 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 DB = SQLAlchemy(app)
 
 
-# Product table
+# -----------------------
+# DATABASE MODELS
+# -----------------------
+
 class Product(DB.Model):
     id = DB.Column(DB.Integer, primary_key=True)
     name = DB.Column(DB.String(100))
     price = DB.Column(DB.Integer)
-    quantity = DB.Column(DB.Integer, default=0)
+    stock = DB.Column(DB.Integer)
 
 
-# Bill table
 class Bill(DB.Model):
     id = DB.Column(DB.Integer, primary_key=True)
     customer = DB.Column(DB.String(100))
@@ -25,111 +28,136 @@ class Bill(DB.Model):
     price = DB.Column(DB.Integer)
     quantity = DB.Column(DB.Integer)
     total = DB.Column(DB.Integer)
+    date = DB.Column(DB.String(50))
 
 
 with app.app_context():
     DB.create_all()
 
 
-# Billing page
-@app.route('/', methods=['GET', 'POST'])
-def billing():
+# -----------------------
+# BILLING PAGE
+# -----------------------
 
-    total = None
-    grand_total = None
+@app.route("/", methods=["GET", "POST"])
+def billing():
 
     products = Product.query.all()
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        customer = request.form['customer']
-        product_id = request.form['product']
-        quantity = int(request.form['quantity'])
+        customer = request.form["customer"]
+        product_id = int(request.form["product_id"])
+        quantity = int(request.form["quantity"])
 
-        selected_product = Product.query.get(product_id)
+        product = Product.query.get(product_id)
 
-        if selected_product:
+        if not product:
+            return "Product not found"
 
-            if selected_product.quantity >= quantity:
+        if product.stock < quantity:
+            return "Not enough stock"
 
-                price = selected_product.price
-                total = price * quantity
-                grand_total = total
+        total = product.price * quantity
 
-                # stock कम
-                selected_product.quantity -= quantity
+        bill = Bill(
+            customer=customer,
+            product=product.name,
+            price=product.price,
+            quantity=quantity,
+            total=total,
+            date=datetime.now().strftime("%d-%m-%Y %H:%M")
+        )
 
-                # bill save
-                new_bill = Bill(
-                    customer=customer,
-                    product=selected_product.name,
-                    price=price,
-                    quantity=quantity,
-                    total=grand_total
-                )
+        product.stock -= quantity
 
-                DB.session.add(new_bill)
-                DB.session.commit()
+        DB.session.add(bill)
+        DB.session.commit()
 
-                return render_template(
-                    'billing.html',
-                    customer=customer,
-                    product=selected_product.name,
-                    price=price,
-                    quantity=quantity,
-                    total=total,
-                    grand_total=grand_total,
-                    products=products
-                )
+        return render_template(
+            "billing.html",
+            products=products,
+            customer=customer,
+            product=product.name,
+            price=product.price,
+            quantity=quantity,
+            total=total,
+            grand_total=total
+        )
 
-        return redirect('/')
-
-    return render_template(
-        'billing.html',
-        products=products
-    )
+    return render_template("billing.html", products=products)
 
 
-# Products page
-@app.route('/products', methods=['GET', 'POST'])
+# -----------------------
+# PRODUCTS PAGE
+# -----------------------
+
+@app.route("/products", methods=["GET", "POST"])
 def products():
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        name = request.form['name']
-        price = request.form['price']
-        quantity = request.form['quantity']
+        name = request.form["name"]
+        price = int(request.form["price"])
+        stock = int(request.form["stock"])
 
         new_product = Product(
             name=name,
             price=price,
-            quantity=quantity
+            stock=stock
         )
 
         DB.session.add(new_product)
         DB.session.commit()
 
-        return redirect('/products')
+        return redirect("/products")
 
     all_products = Product.query.all()
 
     return render_template(
-        'products.html',
+        "products.html",
         products=all_products
     )
 
 
-# Bill history
-@app.route('/history')
+# -----------------------
+# DELETE PRODUCT
+# -----------------------
+
+@app.route("/delete-product/<int:id>")
+def delete_product(id):
+
+    product = Product.query.get(id)
+
+    if product:
+        DB.session.delete(product)
+        DB.session.commit()
+
+    return redirect("/products")
+
+
+# -----------------------
+# BILL HISTORY
+# -----------------------
+
+@app.route("/history")
 def history():
 
     bills = Bill.query.order_by(Bill.id.desc()).all()
 
     return render_template(
-        'history.html',
+        "history.html",
         bills=bills
     )
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+# -----------------------
+# RUN APP
+# -----------------------
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=True
+    )
